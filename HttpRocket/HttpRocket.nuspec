@@ -8,7 +8,7 @@
     <owners>$author$</owners>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
     <projectUrl>http://github.com/swlkr/httprocket</projectUrl>
-    <iconUrl></iconUrl>
+    <iconUrl>http://i.imgur.com/u8AFBDt.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <releaseNotes>Initial version.</releaseNotes>
