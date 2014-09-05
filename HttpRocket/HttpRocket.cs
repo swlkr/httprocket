@@ -10,6 +10,7 @@ namespace HttpRocket
         HttpRocketResponse Get();
         HttpRocketResponse Put(string requestData);
         HttpRocketResponse Post(string requestData);
+		HttpRocketResponse Delete();
         string ContentType { get; set; }
         string Method { get; set; }
     }
@@ -48,6 +49,10 @@ namespace HttpRocket
             return MakeRequest(WebRequestMethods.Http.Put, requestData);
         }
 
+		public HttpRocketResponse Delete() {
+			return MakeRequest("DELETE", null);
+		}
+
         private HttpRocketResponse MakeRequest(string method, string requestData)
         {
             httpWebRequest.Method = method;
@@ -57,17 +62,15 @@ namespace HttpRocket
             try
             {
                 SetRequestData(requestData);
+				
+                using( var response = httpWebRequest.GetResponse())
+                using( var responseStream = response.GetResponseStream())
+                using (var responseStreamReader = new StreamReader(responseStream)){
+	                
+					var responseFromServer = responseStreamReader.ReadToEnd();
+	                return new HttpRocketResponse(((HttpWebResponse) response).StatusCode, responseFromServer);
 
-                var response = httpWebRequest.GetResponse();
-                var responseStream = response.GetResponseStream();
-                var responseStreamReader = new StreamReader(responseStream);
-                var responseFromServer = responseStreamReader.ReadToEnd();
-
-                responseStreamReader.Close();
-                responseStream.Close();
-                response.Close();
-
-                return new HttpRocketResponse(((HttpWebResponse)response).StatusCode, responseFromServer);
+                }
             }
             catch (System.Net.WebException e)
             {
