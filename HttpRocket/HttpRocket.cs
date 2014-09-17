@@ -7,15 +7,15 @@ namespace HttpRocket
 {
     public interface IHttpRocket
     {
-        HttpRocketResponse Get();
-        HttpRocketResponse Put(string requestData);
-        HttpRocketResponse Post(string requestData);
-		HttpRocketResponse Delete();
+        Response Get();
+		Response Put(string requestData);
+		Response Post(string requestData);
+		Response Delete();
         string ContentType { get; set; }
         string Method { get; set; }
     }
 
-    public class HttpRocket : IHttpRocket
+    public class Request : IHttpRocket
     {
         private readonly HttpWebRequest httpWebRequest;
         public string ContentType { get; set; }
@@ -25,35 +25,35 @@ namespace HttpRocket
             set { httpWebRequest.Method = value; }
         }
 
-        public HttpRocket(string url)
+        public Request(string url)
             : this((HttpWebRequest)WebRequest.Create(url)) { }
 
-        public HttpRocket(HttpWebRequest httpWebRequest)
+        public Request(HttpWebRequest httpWebRequest)
         {
             this.httpWebRequest = httpWebRequest;
             ContentType = "application/x-www-form-urlencoded";
         }
 
-        public HttpRocketResponse Get()
+        public Response Get()
         {
             return MakeRequest(WebRequestMethods.Http.Get, null);
         }
 
-        public HttpRocketResponse Post(string requestData)
+		public Response Post(string requestData)
         {
             return MakeRequest(WebRequestMethods.Http.Post, requestData);
         }
 
-        public HttpRocketResponse Put(string requestData)
+		public Response Put(string requestData)
         {
             return MakeRequest(WebRequestMethods.Http.Put, requestData);
         }
 
-		public HttpRocketResponse Delete() {
+		public Response Delete() {
 			return MakeRequest("DELETE", null);
 		}
 
-        private HttpRocketResponse MakeRequest(string method, string requestData)
+		private Response MakeRequest(string method, string requestData)
         {
             httpWebRequest.Method = method;
             httpWebRequest.ContentType = ContentType;
@@ -68,13 +68,20 @@ namespace HttpRocket
                 using (var responseStreamReader = new StreamReader(responseStream)){
 	                
 					var responseFromServer = responseStreamReader.ReadToEnd();
-	                return new HttpRocketResponse(((HttpWebResponse) response).StatusCode, responseFromServer);
+					return new Response(((HttpWebResponse)response).StatusCode, responseFromServer);
 
                 }
             }
             catch (System.Net.WebException e)
             {
-                return new HttpRocketResponse(HttpStatusCode.NotFound, e.Message);
+				using (var response = e.Response) {
+					using (var responseStream = response.GetResponseStream()) {
+						using (var responseStreamReader = new StreamReader(responseStream)) {
+							var responseFromServer = responseStreamReader.ReadToEnd();
+							return new Response(HttpStatusCode.NotFound, responseFromServer);
+						}
+					}
+				}
             }
         }
 
@@ -89,14 +96,14 @@ namespace HttpRocket
         }
     }
 
-    public class HttpRocketResponse
+    public class Response
     {
         private readonly HttpStatusCode httpStatusCode;
         private readonly string responseBody;
 
-        public HttpRocketResponse() { }
+        public Response() { }
 
-        public HttpRocketResponse(HttpStatusCode httpStatusCode, string responseBody)
+        public Response(HttpStatusCode httpStatusCode, string responseBody)
         {
             this.httpStatusCode = httpStatusCode;
             this.responseBody = responseBody;
