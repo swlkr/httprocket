@@ -19,10 +19,12 @@ namespace HttpRocket {
 		public string ContentType { get; set; }
 		public string Url { get; set; }
 		public string Method { get; set; }
+		public Dictionary<string, string> Headers { get; set; }
 
 		public Request(string url) {
 			Url = url;
 			ContentType = ContentType ?? "application/x-www-form-urlencoded";
+			Headers = new Dictionary<string, string>();
 		}
 
 		public void CreateRequest(string method, string requestData, Dictionary<string, string> headers) {
@@ -38,19 +40,19 @@ namespace HttpRocket {
 		}
 
 		public Response Get() {
-			return MakeRequest(WebRequestMethods.Http.Get, null);
+			return MakeRequest(WebRequestMethods.Http.Get, null, Headers);
 		}
 
 		public Response Post(string requestData) {
-			return MakeRequest(WebRequestMethods.Http.Post, requestData);
+			return MakeRequest(WebRequestMethods.Http.Post, requestData, Headers);
 		}
 
 		public Response Put(string requestData) {
-			return MakeRequest(WebRequestMethods.Http.Put, requestData);
+			return MakeRequest(WebRequestMethods.Http.Put, requestData, Headers);
 		}
 
 		public Response Delete() {
-			return MakeRequest("DELETE", null);
+			return MakeRequest("DELETE", null, Headers);
 		}
 
 		public Response MakeRequest(string method, string requestData) {
