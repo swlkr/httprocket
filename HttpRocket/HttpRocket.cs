@@ -27,18 +27,6 @@ namespace HttpRocket {
 			Headers = new Dictionary<string, string>();
 		}
 
-		public void CreateRequest(string method, string requestData, Dictionary<string, string> headers) {
-			HttpWebRequest = (HttpWebRequest)WebRequest.Create(Url);
-			HttpWebRequest.Method = method;
-			HttpWebRequest.ContentType = ContentType;
-			HttpWebRequest.ContentLength = 0;
-			foreach (var header in headers) {
-				HttpWebRequest.Headers.Add(header.Key, header.Value);
-			}
-
-			SetRequestData(requestData);
-		}
-
 		public Response Get() {
 			return MakeRequest(WebRequestMethods.Http.Get, null, Headers);
 		}
@@ -60,9 +48,19 @@ namespace HttpRocket {
 		}
 
 		public Response MakeRequest(string method, string requestData, Dictionary<string, string> headers) {
-			CreateRequest(method, requestData, headers);
+			HttpWebRequest = (HttpWebRequest)WebRequest.Create(Url);
+			HttpWebRequest.Method = method;
+			HttpWebRequest.ContentType = ContentType;
+			HttpWebRequest.ContentLength = 0;
+
+			foreach (var header in headers) {
+				HttpWebRequest.Headers.Add(header.Key, header.Value);
+			}
+
 
 			try {
+				SetRequestData(requestData);
+
 				using (var response = HttpWebRequest.GetResponse())
 				using (var responseStream = response.GetResponseStream())
 				using (var responseStreamReader = new StreamReader(responseStream)) {
@@ -76,7 +74,9 @@ namespace HttpRocket {
 					using (var responseStream = response.GetResponseStream()) {
 						using (var responseStreamReader = new StreamReader(responseStream)) {
 							var responseFromServer = responseStreamReader.ReadToEnd();
-							return new Response(HttpStatusCode.NotFound, responseFromServer);
+							var res = e.Response as HttpWebResponse;
+							var statusCode = res != null ? res.StatusCode : HttpStatusCode.NotFound;
+							return new Response(statusCode, responseFromServer);
 						}
 					}
 				}
